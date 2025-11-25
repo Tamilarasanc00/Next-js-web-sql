@@ -94,6 +94,15 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+
+export const passwordOtp = pgTable("password_otp", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 150 }).notNull(),
+  otp: varchar("otp", { length: 4 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
 // ------------------------- TYPES -------------------------
 
 export type User = typeof users.$inferSelect;
