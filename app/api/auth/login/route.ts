@@ -1,71 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { users, loginHistory } from '@/lib/db/schema';
-import { verifyPassword, generateToken } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { NextResponse } from "next/server";
+import { Database } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
-
-    // Find user
-    const userResult = await db
-      .select()
+    const user = await Database.select()
       .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+      .where(eq(users.email, email));
 
-    if (userResult.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+    if (user.length === 0) {
+      return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    const user = userResult[0];
+    const existingUser = user[0];
 
-    // Verify password
-    const isValidPassword = await verifyPassword(password, user.password);
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+    const validPass = await bcrypt.compare(password, existingUser.password);
+    if (!validPass) {
+      return NextResponse.json({ error: "Invalid password" }, { status: 400 });
     }
 
-    // Record login history
-    await db.insert(loginHistory).values({
-      userId: user.id,
-      ipAddress: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-    });
+    const token = jwt.sign(
+      {
+        id: existingUser.id,
+        email: existingUser.email,
+        userType: existingUser.userType,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" }
+    );
 
-    // Generate token
-    const token = generateToken({ userId: user.id, email: user.email });
+    console.log("Name:-",existingUser.name);
+    
 
     return NextResponse.json({
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        points: user.points,
-        upiId: user.upiId,
-      },
+      message: "Login successful",
       token,
+      user: {
+        id: existingUser.id,
+        name: existingUser.name,
+        email: existingUser.email,
+        userType: existingUser.userType,
+      },
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.log("LOGIN ERROR:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

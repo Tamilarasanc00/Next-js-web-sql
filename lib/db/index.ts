@@ -1,8 +1,35 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
+// import { drizzle } from "drizzle-orm/node-postgres";
+// import { Pool } from "pg";
 
-const client = postgres(process.env.DATABASE_URL!);
-export const db = drizzle(client, { schema });
+// const pool = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+// });
 
-export type Database = typeof db;
+// pool.connect()
+//   .then(() => console.log("✔ PostgreSQL Connected Successfully"))
+//   .catch((err) => console.log("⚠ Connection Failed:", err.message));
+
+// export const Database = drizzle(pool); // <-- MUST MATCH EXACT NAME
+
+
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Auto-Reconnect + Status Log
+async function connectWithRetry() {
+  try {
+    await pool.connect();
+    console.log("✔ PostgreSQL Connected Successfully");
+  } catch (err: any) {
+    console.error("⚠ PostgreSQL Connection Failed, retrying in 5 seconds…", err.message);
+    setTimeout(connectWithRetry, 5000);
+  }
+}
+
+connectWithRetry();
+
+export const Database = drizzle(pool);

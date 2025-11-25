@@ -1,78 +1,73 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
-import { hashPassword, generateToken, validateEmail } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { NextResponse } from "next/server";
+import { Database } from "@/lib/db/index";
+import { users } from "@/lib/db/schema";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { email, password, name, upiId } = await request.json();
+    const { name, mobile, email, password, userType } = await req.json();
 
-    if (!email || !password || !name) {
+    if (!name || !mobile || !email || !password || !userType) {
       return NextResponse.json(
-        { error: 'Email, password, and name are required' },
+        { error: "All fields are required" },
         { status: 400 }
       );
     }
 
-    if (!validateEmail(email)) {
+    // Check if email exists
+    const existing = await Database.select().from(users).where(eq(users.email, email));
+
+    if (existing.length > 0) {
       return NextResponse.json(
-        { error: 'Invalid email format' },
+        { error: "Email already registered" },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Check if user already exists
-    const existingUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    if (existingUser.length > 0) {
-      return NextResponse.json(
-        { error: 'User already exists with this email' },
-        { status: 409 }
-      );
-    }
-
-    // Hash password and create user
-    const hashedPassword = await hashPassword(password);
-    
-    const [user] = await db
+    // Insert user
+    const newUser = await Database
       .insert(users)
       .values({
+        name,
+        mobile,
         email,
         password: hashedPassword,
-        name,
-        upiId,
+        userType,
       })
       .returning();
 
-    // Generate token
-    const token = generateToken({ userId: user.id, email: user.email });
+    const createdUser = newUser[0];
+
+    // Create JWT
+    const token = jwt.sign(
+      {
+        id: createdUser.id,
+        email: createdUser.email,
+        userType: createdUser.userType,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" }
+    );
 
     return NextResponse.json({
-      message: 'User registered successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        points: user.points,
-      },
+      message: "Registration successful",
       token,
+      user: {
+        id: createdUser.id,
+        name: createdUser.name,
+        email: createdUser.email,
+        userType: createdUser.userType,
+      },
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.log("REGISTER ERROR:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Server error during registration" },
       { status: 500 }
     );
   }

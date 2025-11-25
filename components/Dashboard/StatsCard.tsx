@@ -1,37 +1,22 @@
-interface StatsCardProps {
-  title: string;
-  value: string | number;
-  description?: string;
-  icon?: React.ReactNode;
-}
+"use client";
+import React from "react";
 
-export default function StatsCard({ title, value, description, icon }: StatsCardProps) {
-  return (
-    <div className="bg-white overflow-hidden shadow rounded-lg">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            {icon}
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">
-                {title}
-              </dt>
-              <dd>
-                <div className="text-lg font-medium text-gray-900">
-                  {value}
-                </div>
-                {description && (
-                  <div className="text-sm text-gray-500">
-                    {description}
-                  </div>
-                )}
-              </dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+
+export function StatsCard({ users, products, points }: { users: number; products: number; points: number; }) {
+return (
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+<div className="bg-white p-4 rounded shadow">
+<p className="text-sm text-gray-500">Total Users</p>
+<p className="text-2xl font-semibold">{users}</p>
+</div>
+<div className="bg-white p-4 rounded shadow">
+<p className="text-sm text-gray-500">Total Products</p>
+<p className="text-2xl font-semibold">{products}</p>
+</div>
+<div className="bg-white p-4 rounded shadow">
+<p className="text-sm text-gray-500">Estimated Points</p>
+<p className="text-2xl font-semibold">{points}</p>
+</div>
+</div>
+);
 }
