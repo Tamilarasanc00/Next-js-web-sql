@@ -2,6 +2,9 @@
 "use client";
 
 import { useState } from "react";
+import loggin from '../../app/register/page';
+import Link from "next/link";
+
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -86,9 +89,9 @@ export default function LoginForm() {
         </button>
 
         <div className="text-center pt-2 text-sm">
-          <a href="./app/register" className="text-indigo-600 hover:underline">
+          <Link href="/register" className="text-indigo-600 hover:underline">
             Create new account
-          </a>
+          </Link>
         </div>
       </form>
     </div>

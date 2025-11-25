@@ -1,5 +1,7 @@
-import RegisterForm from "@/components/Auth/LoginForm";
+'use client'
+
+import RegisterForm from "@/components/Auth/RegisterForm";
 
 export default function RegisterPage() {
-  return <RegisterForm />;
+  return <RegisterForm onToggleMode={()=> {}}/>;
 }
