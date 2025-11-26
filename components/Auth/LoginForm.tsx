@@ -40,6 +40,7 @@ export default function LoginForm() {
 
       // Redirect to dashboard
       window.location.href = "/dashboard";
+      
     } catch (err) {
       console.log("Login Error:", err);
       setError("Network error. Please try again.");

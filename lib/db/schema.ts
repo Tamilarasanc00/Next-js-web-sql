@@ -5,7 +5,8 @@ import {
   integer, 
   boolean,
   varchar, 
-  timestamp 
+  timestamp,
+  json 
 } from "drizzle-orm/pg-core";
 
 import { createInsertSchema } from "drizzle-zod";
@@ -33,46 +34,46 @@ export const insertUserSchema = createInsertSchema(users, {
 
 // ------------------------- PRODUCTS -------------------------
 
-export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  sku: text("sku").unique().notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  pointsValue: integer("points_value").notNull(),
-  imageUrl: text("image_url"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// export const products = pgTable("products", {
+//   id: serial("id").primaryKey(),
+//   sku: text("sku").unique().notNull(),
+//   name: text("name").notNull(),
+//   description: text("description"),
+//   pointsValue: integer("points_value").notNull(),
+//   imageUrl: text("image_url"),
+//   isActive: boolean("is_active").default(true),
+//   createdAt: timestamp("created_at").defaultNow(),
+//   updatedAt: timestamp("updated_at").defaultNow(),
+// });
 
-export const insertProductSchema = createInsertSchema(products, {
-  sku: z.string().min(1),
-  name: z.string().min(1),
-  pointsValue: z.number().positive(),
-}).omit({ id: true });
+// export const insertProductSchema = createInsertSchema(products, {
+//   sku: z.string().min(1),
+//   name: z.string().min(1),
+//   pointsValue: z.number().positive(),
+// }).omit({ id: true });
 
 // ------------------------- INVENTORIES -------------------------
 
-export const inventories = pgTable("inventories", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  productId: integer("product_id").references(() => products.id),
-  quantity: integer("quantity").notNull(),
-  pointsEarned: integer("points_earned").notNull(),
-  scannedAt: timestamp("scanned_at").defaultNow(),
-});
+// export const inventories = pgTable("inventories", {
+//   id: serial("id").primaryKey(),
+//   userId: integer("user_id").references(() => users.id),
+//   productId: integer("product_id").references(() => products.id),
+//   quantity: integer("quantity").notNull(),
+//   pointsEarned: integer("points_earned").notNull(),
+//   scannedAt: timestamp("scanned_at").defaultNow(),
+// });
 
 // ------------------------- REDEMPTIONS -------------------------
 
-export const redemptions = pgTable("redemptions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  productId: integer("product_id").references(() => products.id),
-  pointsUsed: integer("points_used").notNull(),
-  upiId: text("upi_id").notNull(),
-  status: text("status").default("pending"), // pending, completed, failed
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// export const redemptions = pgTable("redemptions", {
+//   id: serial("id").primaryKey(),
+//   userId: integer("user_id").references(() => users.id),
+//   productId: integer("product_id").references(() => products.id),
+//   pointsUsed: integer("points_used").notNull(),
+//   upiId: text("upi_id").notNull(),
+//   status: text("status").default("pending"), // pending, completed, failed
+//   createdAt: timestamp("created_at").defaultNow(),
+// });
 
 // ------------------------- LOGIN HISTORY -------------------------
 
@@ -101,6 +102,60 @@ export const passwordOtp = pgTable("password_otp", {
   email: varchar("email", { length: 150 }).notNull(),
   otp: varchar("otp", { length: 4 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
+// ------------------------- PASSWORD RESET TOKENS ENDS -------------------------
+
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  sku: varchar("sku", { length: 200 }).notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  pointsValue: integer("points_value").notNull().default(0),
+  imageUrl: text("image_url"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertProductSchema = createInsertSchema(products, {
+  sku: z.string().min(1),
+  name: z.string().min(1),
+  pointsValue: z.number().positive(),
+}).omit({ id: true });
+
+export const inventories = pgTable("inventories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sku: varchar("sku", { length: 200 }).notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  pointsEarned: integer("points_earned").notNull().default(0),
+  processed: boolean("processed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const pointsLedger = pgTable("points_ledger", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  change: integer("change").notNull(),
+  balanceAfter: integer("balance_after").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'earning', 'redemption', 'adjustment'
+  refId: integer("ref_id"),
+  meta: json("meta"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const redemptions = pgTable("redemptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  productId: integer("product_id").notNull(),
+  pointsUsed: integer("points_used").notNull(),
+  upiId: varchar("upi_id", { length: 150 }).notNull(),
+  status: varchar("status", { length: 20 }).default("pending"),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
 });
 
 

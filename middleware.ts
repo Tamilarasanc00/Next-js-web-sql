@@ -1,71 +1,3 @@
-// import { NextRequest, NextResponse } from "next/server";
-// import jwt from "jsonwebtoken";
-
-// export async function middleware(req: NextRequest) {
-//   const path = req.nextUrl.pathname;
-
-//   // Routes that don't require login
-//   const publicRoutes = ["/login", "/register"];
-//   if (publicRoutes.includes(path)) return NextResponse.next();
-
-//   const token = req.cookies.get("token")?.value;
-
-//   if (!token) return NextResponse.redirect(new URL("/login", req.url));
-
-//   let decoded: any;
-//   try {
-//     decoded = jwt.verify(token, process.env.JWT_SECRET!);
-//   } catch {
-//     return NextResponse.redirect(new URL("/login", req.url));
-//   }
-
-//   const role = decoded.userType; // admin, staff, customer
-
-//   // ------------------ ADMIN-ONLY ROUTES ------------------
-//   if (
-//     path.startsWith("/dashboard/users") ||
-//     path.startsWith("/api/admin/users")
-//   ) {
-//     if (role !== "admin") {
-//       return NextResponse.redirect(new URL("/not-authorized", req.url));
-//     }
-//   }
-
-//   // ------------------ STAFF + ADMIN CAN ADD PRODUCTS ------------------
-//   if (path.startsWith("/api/admin/products") && req.method === "POST") {
-//     if (role === "customer") {
-//       return NextResponse.redirect(new URL("/not-authorized", req.url));
-//     }
-//   }
-
-//   // ------------------ DELETE PRODUCT → ADMIN ONLY ------------------
-//   if (path.startsWith("/api/admin/products") && req.method === "DELETE") {
-//     if (role !== "admin") {
-//       return NextResponse.redirect(new URL("/not-authorized", req.url));
-//     }
-//   }
-
-//   // ------------------ UPDATE PRODUCT → STAFF/ADMIN ------------------
-//   if (path.startsWith("/api/admin/products") && req.method === "PUT") {
-//     if (role === "customer") {
-//       return NextResponse.redirect(new URL("/not-authorized", req.url));
-//     }
-//   }
-
-//   // ------------------ CUSTOMER RESTRICTION ------------------
-//   if (path.startsWith("/dashboard/products") && role === "customer") {
-//     // Customers can view but not modify UI
-//     return NextResponse.next();
-//   }
-
-//   return NextResponse.next();
-// }
-
-// export const config = {
-//   matcher: ["/app/dashboard/:path*", "/app/api/admin/:path*"],
-// };
-
-
 
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -122,6 +54,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/not-authorized", req.url));
   }
 
+  //Staff
+if (pathname.startsWith("/staff")) {
+  if (role !== "staff") {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+}
+
+
   // customers cannot access admin APIs
   if (pathname.startsWith("/api/admin") && role !== "admin") {
     return NextResponse.redirect(new URL("/not-authorized", req.url));
@@ -134,5 +74,14 @@ export const config = {
   matcher: [
     "/app/dashboard/:path*",
     "/app/api/admin/:path*",
+    "/staff/:path*"
   ],
 };
+// export const config = {
+//   matcher: [
+//     "/app/dashboard/:path*",
+//     "/app/api/admin/:path*",
+//     "/app/staff/:path*"
+//   ],
+// };
+

@@ -107,14 +107,18 @@ async function checkAdmin(req: Request) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    if (decoded.userType !== "admin")
-      return { ok: false, status: 403, error: "Forbidden: Admin Only" };
 
-    return { ok: true };
+    // Allow STAFF and ADMIN
+    if (decoded.userType !== "admin" && decoded.userType !== "staff") {
+      return { ok: false, status: 403, error: "Forbidden: Admin/Staff Only" };
+    }
+
+    return { ok: true, role: decoded.userType };
   } catch (err) {
     return { ok: false, status: 401, error: "Invalid Token" };
   }
 }
+
 
 // ----------------------------------------
 // GET All Users (Admin Only)

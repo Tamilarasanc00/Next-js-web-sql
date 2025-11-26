@@ -9,7 +9,8 @@
 import { useState } from "react";
 import Link from "next/link";
 
-export default function LoginPage() {
+// export default function LoginPage() {
+export default function LoginForm({ onToggleMode, onLoginSuccess }: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,11 +36,19 @@ export default function LoginPage() {
         return;
       }
 
+
+
+
       // Save token
       localStorage.setItem("token", data.token);
       document.cookie = `token=${data.token}; path=/; max-age=604800; SameSite=Lax`;
 
+
+
       window.location.href = "/dashboard";
+
+
+
     } catch (err) {
       setError("Network error. Try again.");
     } finally {

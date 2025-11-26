@@ -57,13 +57,14 @@ import DashboardLayout from "@/components/Dashboard/Layout";
 import { StatsCard } from "@/components/Dashboard/StatsCard";
 import UsersTable from "@/components/Dashboard/UsersTable";
 import ProductsTable from "@/components/Dashboard/ProductsTable";
+import PointsCustTable from "@/app/staff/users/[id]/products/page";
 import {jwtDecode} from "jwt-decode";
 
 export default function DashboardPage() {
   const [usersCount, setUsersCount] = useState(0);
   const [productsCount, setProductsCount] = useState(0);
   const [pointsEstimate, setPointsEstimate] = useState(0);
-  const [tab, setTab] = useState<'overview' | 'users' | 'products'>("overview");
+  const [tab, setTab] = useState<'overview' | 'users' | 'products' | 'pointsToCustomer'>("overview");
   const [role, setRole] = useState("");
 
   // -----------------------------
@@ -142,6 +143,17 @@ export default function DashboardPage() {
         >
           Products
         </button>
+
+      {/* Staff + Admin  */}
+        <button
+          onClick={() => setTab("pointsToCustomer")}
+          className={`px-3 py-1 rounded ${
+            tab === "pointsToCustomer" ? "bg-indigo-600 text-white" : "bg-white border"
+          }`}
+        >
+          Points To Customer
+        </button>
+
       </div>
 
       {/* ---------------- Tab Content ---------------- */}
@@ -152,6 +164,8 @@ export default function DashboardPage() {
       {tab === "users" && role === "admin" && <UsersTable />}
 
       {tab === "products" && <ProductsTable />}
+
+      {tab === "pointsToCustomer" && <PointsCustTable />}
     </DashboardLayout>
   );
 }
