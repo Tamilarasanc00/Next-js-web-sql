@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 150 }).notNull().unique(),
   password: text("password").notNull(),
   userType: varchar("user_type", { length: 20 }).notNull(), // admin, customer, staff
+  image: text("image").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -124,6 +124,7 @@ export default function VerifyOtpPage() {
   const handleVerify = async (e: any) => {
     e.preventDefault();
     setError("");
+console.log("serverOtp",serverOtp);
 
     if (otp !== serverOtp) {
       setError("Invalid OTP");
@@ -152,6 +153,7 @@ export default function VerifyOtpPage() {
         setLoading(false);
         return;
       }
+console.log("RESEND OTP",data);
 
       setResendMessage("OTP resent successfully!");
     } catch (err) {
