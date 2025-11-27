@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   userType: varchar("user_type", { length: 20 }).notNull(), // admin, customer, staff
   image: text("image").notNull(),
+  totalPoints: varchar("total_points", { length: 100 }).default("0"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -113,7 +114,7 @@ export const products = pgTable("products", {
   name: text("name").notNull(),
   description: text("description"),
   pointsValue: integer("points_value").notNull().default(0),
-  imageUrl: text("image_url"),
+  imageUrl: varchar("image_url", { length: 500 }).default(""),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -157,6 +158,29 @@ export const redemptions = pgTable("redemptions", {
   createdAt: timestamp("created_at").defaultNow(),
   processedAt: timestamp("processed_at"),
 });
+
+export const redeemHistory = pgTable("redeem_history", {
+  id: serial("id").primaryKey(),
+
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+
+  redeemType: varchar("redeem_type", { length: 20 }).notNull(), // "cash" | "product"
+
+  cashId: varchar("cash_id", { length: 200 }), // stores UPI ID
+
+  productId: integer("product_id")
+    .references(() => products.id),
+
+  redeemedPoints: integer("redeemed_points").notNull(),
+
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type RedeemHistory = typeof redeemHistory.$inferSelect;
+export type NewRedeemHistory = typeof redeemHistory.$inferInsert;
+
 
 
 // ------------------------- TYPES -------------------------

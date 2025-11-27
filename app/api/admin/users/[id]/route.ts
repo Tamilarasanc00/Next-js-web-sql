@@ -24,7 +24,7 @@ async function checkAdmin(req: Request) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
-    if (decoded.userType !== "admin") {
+    if (decoded.userType !== "admin" ) {
       return { ok: false, status: 403, error: "Forbidden: Admin Only" };
     }
 
@@ -56,6 +56,28 @@ export async function PUT(
   }
 }
 
+export async function GET(req: Request, context: any) {
+  try {
+    // support both Promise and plain object
+    const params = typeof context?.params?.then === "function" ? await context.params : context.params;
+    const idStr = params?.id ?? null;
+
+    const userId = Number(idStr);
+    if (!Number.isFinite(userId) || userId <= 0) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
+
+    const rows = await Database.select().from(users).where(eq(users.id, userId)).limit(1);
+    const user = Array.isArray(rows) ? rows[0] : rows;
+
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    return NextResponse.json({ user });
+  } catch (err) {
+    console.error("GET /api/admin/users/[id] error:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
 // ---------------------- DELETE USER ----------------------
 export async function DELETE(
   req: Request,

@@ -144,6 +144,9 @@ export default function ProductsTable() {
   const [pointsValue, setPointsValue] = useState<number>(0);
   const [role, setRole] = useState<string>("");
 
+const [imageFile, setImageFile] = useState<File | null>(null);
+const [preview, setPreview] = useState("");
+
   // Decode token and get role
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -170,25 +173,48 @@ export default function ProductsTable() {
     fetchProducts();
   }, []);
 
-  const createProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sku, name, pointsValue }),
-      });
+  const handleImageChange = (e: any) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-      if (res.ok) {
-        await fetchProducts();
-        setSku("");
-        setName("");
-        setPointsValue(0);
-      }
-    } catch (err) {
-      console.error(err);
+  setImageFile(file);
+  setPreview(URL.createObjectURL(file));
+};
+
+const createProduct = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!sku || !name || !pointsValue) return;
+
+  const formData = new FormData();
+  formData.append("sku", sku);
+  formData.append("name", name);
+  formData.append("pointsValue", String(pointsValue));
+  if (imageFile) formData.append("image", imageFile);
+
+  try {
+    const res = await fetch("/api/admin/products", {
+      method: "POST",
+      body: formData, // <-- IMPORTANT: NO HEADERS
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      await fetchProducts();
+      setSku("");
+      setName("");
+      setPointsValue(0);
+      setImageFile(null);
+      setPreview("");
+    } else {
+      alert(data.error || "Failed");
     }
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 
   const deleteProduct = async (id: number) => {
     try {
@@ -258,42 +284,74 @@ export default function ProductsTable() {
       {/* -----------------------------------------
           CREATE PRODUCT FORM
       ------------------------------------------ */}
-      <div className="bg-white p-4 rounded shadow mb-4">
-        <form
-          onSubmit={createProduct}
-          className="grid grid-cols-1 md:grid-cols-4 gap-2"
-        >
-          <input
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            placeholder="SKU"
-            className="p-2 border rounded"
-            required
-          />
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
-            className="p-2 border rounded"
-            required
-          />
-          <input
-            value={pointsValue}
-            onChange={(e) => setPointsValue(Number(e.target.value))}
-            placeholder="Points"
-            className="p-2 border rounded"
-            type="number"
-            required
-          />
-          <div className="flex gap-2">
-            {role !== "customer" && (
-              <button className="bg-indigo-600 text-white px-3 rounded">
-                Add
-              </button>
-            )}
-          </div>
-        </form>
+      
+        
+{role !== 'customer' && (
+<div className="bg-white p-4 rounded shadow mb-4">
+ <form
+  onSubmit={createProduct}
+  className="grid grid-cols-1 md:grid-cols-5 gap-2"
+>
+  {/* SKU */}
+  <input
+    value={sku}
+    onChange={(e) => setSku(e.target.value)}
+    placeholder="SKU"
+    className="p-2 border rounded"
+    required
+  />
+
+  {/* NAME */}
+  <input
+    value={name}
+    onChange={(e) => setName(e.target.value)}
+    placeholder="Name"
+    className="p-2 border rounded"
+    required
+  />
+
+  {/* POINTS */}
+  <input
+    value={pointsValue}
+    onChange={(e) => setPointsValue(Number(e.target.value))}
+    placeholder="Points"
+    className="p-2 border rounded"
+    type="number"
+    required
+  />
+
+  {/* IMAGE FILE */}
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleImageChange}
+    className="p-2 border rounded"
+  />
+
+  {/* SUBMIT */}
+  <button className="bg-indigo-600 text-white px-3 rounded">
+    Add
+  </button>
+</form>
+{/* IMAGE PREVIEW */}
+{preview && (
+  <div className="mt-2">
+    <img
+      src={preview}
+      className="w-20 h-20 rounded border object-cover"
+    />
+  </div>
+)}
+
       </div>
+)}
+
+
+
+
+
+
+
 
       {/* -----------------------------------------
                PRODUCT TABLE (TANSTACK)

@@ -50,7 +50,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // staff cannot access /dashboard/users
-  if (pathname.startsWith("/dashboard/users") && role !== "admin") {
+  if (pathname.startsWith("/dashboard/users") && role !== "admin" || role!=="customer") {
     return NextResponse.redirect(new URL("/not-authorized", req.url));
   }
 
