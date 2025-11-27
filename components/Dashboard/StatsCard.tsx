@@ -69,6 +69,7 @@ export function StatsCard({
       color: "from-pink-500 to-pink-600",
     },
   ];
+console.log("ROLE",role);
 
   const cards = role === "customer" ? customerCards : adminCards;
 

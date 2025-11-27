@@ -141,7 +141,7 @@ export default function ProductsTable() {
   const [loading, setLoading] = useState(false);
   const [sku, setSku] = useState("");
   const [name, setName] = useState("");
-  const [pointsValue, setPointsValue] = useState<number>(0);
+  const [pointsValue, setPointsValue] = useState<string>(0);
   const [role, setRole] = useState<string>("");
 
 const [imageFile, setImageFile] = useState<File | null>(null);
@@ -204,7 +204,7 @@ const createProduct = async (e: React.FormEvent) => {
       await fetchProducts();
       setSku("");
       setName("");
-      setPointsValue(0);
+      setPointsValue('');
       setImageFile(null);
       setPreview("");
     } else {
@@ -293,13 +293,18 @@ const createProduct = async (e: React.FormEvent) => {
   className="grid grid-cols-1 md:grid-cols-5 gap-2"
 >
   {/* SKU */}
-  <input
-    value={sku}
-    onChange={(e) => setSku(e.target.value)}
-    placeholder="SKU"
-    className="p-2 border rounded"
-    required
-  />
+<input
+  value={sku}
+  onChange={(e) => {
+    let val = e.target.value.toUpperCase();      // convert to uppercase
+    val = val.replace(/[^A-Z0-9]/g, "");         // allow only A-Z and 0-9
+    setSku(val);
+  }}
+  placeholder="SKU"
+  className="p-2 border rounded"
+  required
+/>
+
 
   {/* NAME */}
   <input
@@ -311,14 +316,18 @@ const createProduct = async (e: React.FormEvent) => {
   />
 
   {/* POINTS */}
-  <input
-    value={pointsValue}
-    onChange={(e) => setPointsValue(Number(e.target.value))}
-    placeholder="Points"
-    className="p-2 border rounded"
-    type="number"
-    required
-  />
+<input
+  type="text"
+  className="p-2 border rounded"
+  placeholder="Points"
+  value={pointsValue}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, ''); // only digits 0–9
+    setPointsValue(value);
+  }}
+  required
+/>
+
 
   {/* IMAGE FILE */}
   <input

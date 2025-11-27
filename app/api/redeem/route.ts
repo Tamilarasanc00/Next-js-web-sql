@@ -1,8 +1,96 @@
-// app/api/redeem/route.ts
 import { NextResponse } from "next/server";
 import { Database } from "@/lib/db";
-import { users, redeemHistory, products, pointsLedger } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { redeemHistory, products, users, pointsLedger } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
+import jwt from "jsonwebtoken";
+
+// --------------------- Extract JWT ---------------------
+function getToken(req: Request): string | null {
+  const header = req.headers.get("authorization");
+  if (header && header.startsWith("Bearer ")) {
+    return header.replace("Bearer ", "");
+  }
+
+  // try cookie
+  const cookieToken = req.headers
+    .get("cookie")
+    ?.split("; ")
+    .find((c) => c.startsWith("token="))
+    ?.split("=")[1];
+
+  return cookieToken || null;
+}
+
+// --------------------- GET Redeem History ---------------------
+export async function GET(req: Request) {
+  try {
+    const token = getToken(req);
+    if (!token) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const role = decoded.userType;
+    const userId = Number(decoded.id);
+
+    // ------------------------ Admin & Staff → ALL DATA ------------------------
+    if (role === "admin" || role === "staff") {
+      const rows = await Database
+        .select({
+          id: redeemHistory.id,
+          redeemType: redeemHistory.redeemType,
+          cashId: redeemHistory.cashId,
+          productId: redeemHistory.productId,
+          redeemedPoints: redeemHistory.redeemedPoints,
+          createdAt: redeemHistory.createdAt,
+          productName: products.name,
+          productImage: products.imageUrl,
+          userName: users.name,
+        })
+        .from(redeemHistory)
+        .leftJoin(products, eq(products.id, redeemHistory.productId))
+        .leftJoin(users, eq(users.id, redeemHistory.userId))
+        .orderBy(desc(redeemHistory.createdAt));
+
+      return NextResponse.json(rows);
+    }
+
+    // ------------------------ Customer → ONLY OWN DATA ------------------------
+    if (role === "customer") {
+      const rows = await Database
+        .select({
+          id: redeemHistory.id,
+          redeemType: redeemHistory.redeemType,
+          cashId: redeemHistory.cashId,
+          productId: redeemHistory.productId,
+          redeemedPoints: redeemHistory.redeemedPoints,
+          createdAt: redeemHistory.createdAt,
+          productName: products.name,
+          productImage: products.imageUrl,
+        })
+        .from(redeemHistory)
+        .leftJoin(products, eq(products.id, redeemHistory.productId))
+        .where(eq(redeemHistory.userId, userId))
+        .orderBy(desc(redeemHistory.createdAt));
+console.log("DATA",rows);
+
+      return NextResponse.json(rows);
+    }
+
+    return NextResponse.json({ error: "Unauthorized role" }, { status: 403 });
+
+  } catch (err) {
+    console.error("REDEEM HISTORY ERROR:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
 
 export async function POST(req: Request) {
   try {
@@ -99,3 +187,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

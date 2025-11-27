@@ -273,12 +273,25 @@ const createUser = async (e: React.FormEvent) => {
     className="p-2 border rounded"
     required
   />
-  <input
+  {/* <input
     value={mobile}
     onChange={(e) => setMobile(e.target.value)}
     placeholder="Mobile"
     className="p-2 border rounded"
-  />
+  /> */}
+  <input
+  type="text"
+  className="w-full p-3 border rounded"
+  placeholder="Mobile Number"
+  value={mobile}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setMobile(value);
+  }}
+  pattern="[0-9]{10}"
+  title="Please enter exactly 10 digits"
+  required
+/>
 
   {/* Image Upload */}
   <input
