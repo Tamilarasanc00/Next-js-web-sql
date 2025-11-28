@@ -14,16 +14,27 @@ import { z } from "zod";
 
 // ------------------------- USERS TABLE -------------------------
 
+// export const users = pgTable("users", {
+//   id: serial("id").primaryKey(),
+//   name: text("name").notNull(),
+//   mobile: varchar("mobile", { length: 20 }).notNull(),
+//   email: varchar("email", { length: 150 }).notNull().unique(),
+//   password: text("password").notNull(),
+//   userType: varchar("user_type", { length: 20 }).notNull(), // admin, customer, staff
+//   image: text("image").notNull(),
+//   totalPoints: varchar("total_points", { length: 100 }).default("0"),
+//   createdAt: timestamp("created_at").defaultNow().notNull(),
+// });
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  mobile: varchar("mobile", { length: 20 }).notNull(),
-  email: varchar("email", { length: 150 }).notNull().unique(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
   password: text("password").notNull(),
-  userType: varchar("user_type", { length: 20 }).notNull(), // admin, customer, staff
-  image: text("image").notNull(),
+  mobile: text("mobile"),
+  userType: text("user_type"),
+  image: text("image"),
   totalPoints: varchar("total_points", { length: 100 }).default("0"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // zod schema for user insert
@@ -33,50 +44,6 @@ export const insertUserSchema = createInsertSchema(users, {
   name: z.string().min(2),
 }).omit({ id: true, createdAt: true });
 
-// ------------------------- PRODUCTS -------------------------
-
-// export const products = pgTable("products", {
-//   id: serial("id").primaryKey(),
-//   sku: text("sku").unique().notNull(),
-//   name: text("name").notNull(),
-//   description: text("description"),
-//   pointsValue: integer("points_value").notNull(),
-//   imageUrl: text("image_url"),
-//   isActive: boolean("is_active").default(true),
-//   createdAt: timestamp("created_at").defaultNow(),
-//   updatedAt: timestamp("updated_at").defaultNow(),
-// });
-
-// export const insertProductSchema = createInsertSchema(products, {
-//   sku: z.string().min(1),
-//   name: z.string().min(1),
-//   pointsValue: z.number().positive(),
-// }).omit({ id: true });
-
-// ------------------------- INVENTORIES -------------------------
-
-// export const inventories = pgTable("inventories", {
-//   id: serial("id").primaryKey(),
-//   userId: integer("user_id").references(() => users.id),
-//   productId: integer("product_id").references(() => products.id),
-//   quantity: integer("quantity").notNull(),
-//   pointsEarned: integer("points_earned").notNull(),
-//   scannedAt: timestamp("scanned_at").defaultNow(),
-// });
-
-// ------------------------- REDEMPTIONS -------------------------
-
-// export const redemptions = pgTable("redemptions", {
-//   id: serial("id").primaryKey(),
-//   userId: integer("user_id").references(() => users.id),
-//   productId: integer("product_id").references(() => products.id),
-//   pointsUsed: integer("points_used").notNull(),
-//   upiId: text("upi_id").notNull(),
-//   status: text("status").default("pending"), // pending, completed, failed
-//   createdAt: timestamp("created_at").defaultNow(),
-// });
-
-// ------------------------- LOGIN HISTORY -------------------------
 
 export const loginHistory = pgTable("login_history", {
   id: serial("id").primaryKey(),

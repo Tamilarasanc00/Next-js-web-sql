@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { Database } from "@/lib/db";
 import { redeemHistory, products } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+// import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
+import { desc, asc , eq } from "drizzle-orm";
+
 
 function getUserId(req: Request) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
@@ -32,7 +34,7 @@ export async function GET(req: Request) {
       .from(redeemHistory)
       .leftJoin(products, eq(products.id, redeemHistory.productId))
       .where(eq(redeemHistory.userId, userId))
-      .orderBy(redeemHistory.createdAt.desc);
+      .orderBy(desc(redeemHistory.createdAt));
 
     return NextResponse.json(rows);
   } catch (err) {

@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       .where(eq(redeemHistory.userId, userId));
 
     return NextResponse.json({
-      totalPoints: Number(user[0]?.totalPoints || 0),
+      totalPoints: inventory.reduce((sum, item) => sum + item.pointsEarned, 0),
       totalProducts: new Set(inventory.map((i) => i.sku)).size,
       totalInventory: inventory.length,
       totalRedeemed: redeems.reduce((s, r) => s + r.redeemedPoints, 0),

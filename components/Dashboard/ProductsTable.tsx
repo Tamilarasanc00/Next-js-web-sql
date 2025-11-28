@@ -135,13 +135,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import type { SortingState } from "@tanstack/react-table";
+
 
 export default function ProductsTable() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [sku, setSku] = useState("");
   const [name, setName] = useState("");
-  const [pointsValue, setPointsValue] = useState<string>(0);
+  const [pointsValue, setPointsValue] = useState<any>(0);
   const [role, setRole] = useState<string>("");
 
 const [imageFile, setImageFile] = useState<File | null>(null);
@@ -204,7 +206,7 @@ const createProduct = async (e: React.FormEvent) => {
       await fetchProducts();
       setSku("");
       setName("");
-      setPointsValue('');
+      setPointsValue(0);
       setImageFile(null);
       setPreview("");
     } else {
@@ -382,7 +384,10 @@ function ProductsDataTable({
   data: any[];
   loading: boolean;
 }) {
-  const [sorting, setSorting] = useState([]);
+  
+
+const [sorting, setSorting] = useState<SortingState>([]);
+
   const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({

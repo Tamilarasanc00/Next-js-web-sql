@@ -38,7 +38,7 @@ export default function AssignProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
 
-  const [selectedUser, setSelectedUser] = useState<string>(id ?? "");
+  const [selectedUser, setSelectedUser] = useState<any>(id ?? "");
   const [selectedSku, setSelectedSku] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
   const [pointsEarned, setPointsEarned] = useState<number | "">("");
@@ -54,7 +54,9 @@ export default function AssignProducts() {
 
   const [role, setRole] = useState("");
   const [userId, setUserId] = useState<number | null>(null);
-
+const [loading, setLoading] = useState(false);
+const [query, setQuery] = useState("");
+const [results, setResults] = useState<any[]>([]);
   // Decode token
   useEffect(() => {
     try {
@@ -69,6 +71,25 @@ export default function AssignProducts() {
       setRole("");
     }
   }, []);
+
+    useEffect(() => {
+    if (!query) {
+      setResults([]);
+      return;
+    }
+
+    const delay = setTimeout(async () => {
+      setLoading(true);
+      // const res = await fetch(`/api/users/search?q=${query}`);
+      // const data = await res.json();
+      const res = await fetch(`/api/user/search?q=${query}`);
+const data = await res.json();
+setResults(data);
+      setLoading(false);
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [query]);
 
   // Auto hide toast
   useEffect(() => {
@@ -239,23 +260,59 @@ const loadInventory = useCallback(async () => {
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* User select */}
-            <div>
-              <label className="font-medium block mb-1">Select User</label>
+ {/* USER SEARCH BOX */}
 
-              <select
-                className="border p-2 rounded w-full"
-                value={selectedUser}
-                disabled={role === "customer"} // customer cannot change
-                onChange={(e) => setSelectedUser(e.target.value)}
-              >
-                <option value="">-- Select User --</option>
-                {users.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.mobile})
-                  </option>
-                ))}
-              </select>
+
+
+{/* USER SEARCH BOX */}
+<div className="mb-3 relative">
+  <label className="font-medium block mb-1">Search User</label>
+
+  {/* INPUT BOX */}
+  <input
+    type="text"
+    placeholder="Type name or mobile..."
+    className="border p-2 rounded w-full"
+    value={
+      role === "customer"
+        ? `${users[0]?.name || ""} (${users[0]?.mobile || ""})`
+        : query
+    }
+    disabled={role === "customer"} // CUSTOMER cannot type or search
+    onChange={(e) => {
+      if (role === "customer") return;
+
+      setSelectedUser(""); // reset ID when typing
+      setQuery(e.target.value);
+    }}
+  />
+
+  {/* ADMIN / STAFF SEARCH RESULTS */}
+  {results.length > 0 &&
+    !selectedUser &&
+    role !== "customer" && (
+      <div className="absolute left-0 right-0 bg-white border rounded shadow z-10 max-h-60 overflow-y-auto">
+
+        {results
+          // SHOW ONLY CUSTOMER RIGHTS USERS
+          .filter((u: any) => u.userType === "customer")
+          .map((u: any) => (
+            <div
+              key={u.id}
+              className="p-2 hover:bg-gray-100 cursor-pointer"
+              onClick={() => {
+                setSelectedUser(String(u.id)); // set REAL user id
+                setQuery(`${u.name} (${u.mobile})`); // show nice label
+                setResults([]); // close dropdown
+              }}
+            >
+              {u.name} — {u.mobile}
             </div>
+          ))}
+
+      </div>
+    )}
+</div>
 
             {/* Product select */}
             <div>

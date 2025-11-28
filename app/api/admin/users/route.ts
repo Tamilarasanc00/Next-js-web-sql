@@ -111,6 +111,8 @@ export async function POST(req: Request) {
       })
       .returning();
 
+      
+
     return NextResponse.json(inserted[0]);
   } catch (err) {
     console.log("USERS POST ERROR:", err);

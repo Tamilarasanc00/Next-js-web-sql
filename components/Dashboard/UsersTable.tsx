@@ -108,7 +108,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
+import type { SortingState } from "@tanstack/react-table";
 // -----------------------------
 // USER PAGE
 // -----------------------------
@@ -349,7 +349,8 @@ function AdvancedDataTable({
   data: any[];
   loading: boolean;
 }) {
-  const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
